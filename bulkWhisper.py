@@ -6,7 +6,9 @@ import pandas as pd
 from dotenv import load_dotenv
 
 df = pd.DataFrame(columns=['filename', 'text'])
-
+flagged_audio = pd.DataFrame(columns=['filename', 'text'])
+keyword_df = pd.read_csv('radiospotter_keywords.csv')
+keywords = keyword_df.iloc[:, 0].tolist()
 
 load_dotenv()
 API_TOKEN = os.getenv('API_TOKEN')
@@ -50,13 +52,13 @@ def query(filename):
             text_response = response.json()['text']
 
             global df  # Declare df as global so we can modify it
-
-            # df = pd.concat([df, pd.DataFrame(new_row, index=[0])], ignore_index=True)
-
             new_row = {'filename': filename, 'text': text_response}
             df = pd.concat([df, pd.DataFrame(new_row, index=[0])], ignore_index=True)
 
-            # df = df.append({'filename': filename, 'text': text_response}, ignore_index=True)
+            if any(keyword.lower() in text_response.lower() for keyword in keywords):
+                global flagged_audio
+                flagged_audio = pd.concat([flagged_audio, pd.DataFrame(new_row, index=[0])], ignore_index=True)
+
             time.sleep(2)
 
             return text_response
@@ -79,5 +81,6 @@ for mp3_file in mp3_files:
     print(query(mp3_file))
     print("\n\n")
     df.to_csv('processed_texts.csv', index=False)
-
+    flagged_audio.to_csv('flagged_texts.csv', index=False)  
 print(df)
+print(flagged_audio)
