@@ -1,1 +1,5 @@
 __pycache__/
+combined_results.db
+data/
+test_worker_audio/
+worker_*
